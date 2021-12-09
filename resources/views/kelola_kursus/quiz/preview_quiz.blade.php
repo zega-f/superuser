@@ -1,0 +1,136 @@
+{{-- @extends('layout.template')
+@section('contens')<br> --}}
+<?php
+    $this_quiz = DB::table('quiz')
+	->join('room','room.room_id','=','quiz.room_id')
+        // ->join('tblmapel','tblmapel.id_mapel','=','quiz.mapel_id')
+        ->select('quiz.*','room.room_id','room.room_name')
+    	->where('quiz_id',$item->type_id)
+    	->first();
+
+        $all_question = DB::table('quiz_question')
+        ->where('quiz_id',$item->type_id)
+        ->orderBy('id','DESC')
+        ->get();
+?>
+<div class="container border mb-3 rounded" style="padding: 20px; background-color: white; max-width: 1000px;">
+	<h5 class="mb-3">
+		Quiz
+		<span style="float: right; font-size: 14px; font-weight: normal;">
+			<a href="{{url('unpublish_quiz/'.$this_quiz->quiz_id)}}" class="btn btn-sm btn-warning">
+				Batalkan publikasi <i class="bi bi-check-square"></i>
+			</a>
+		</span>
+	</h5>
+	<table class="table">
+		<tr>
+			<td>Nama Quiz</td>
+			<td>
+				<input 
+				type="text"
+				class="form-control" 
+				value="{{$this_quiz->quiz_name}}" 
+				readonly="" 
+				>
+				<small class="text-muted">Berikan nama yang mewakili isi quiz yang akan Anda buat.</small>
+			</td>
+		</tr>
+		<tr>
+			<td>Kelas/Mapel</td>
+			<td>
+				<div class="row">
+					<div class="col-md-6">
+						<div class="" style="position: relative;">
+							<input type="text" name="kelas" class="form-control form-control-sm" value="VusuSJ" readonly="">
+						</div>
+						<small class="text-muted">Pilih kelas dimana materi ini akan diberikan</small>
+					</div>
+					<div class="col-md-6">
+						<input type="text" name="mapel" class="form-control form-control-sm" value="3" readonly="">
+						<small class="text-muted">Pilih mata pelajaran</small>
+					</div>
+				</div>
+			</td>
+		</tr>
+		<tr>
+			<td>
+				Batas Waktu
+			</td>
+			<td>
+				<input type="number" name="duration" class="form-control form-control-sm" required="" min="1" value="{{$this_quiz->time}}" readonly="">
+				<small>Berikan waktu pengerjaan pada quiz ini. <br>Ketika waktu pengerjaan telah habis, quiz pada siswa akan otomatis di kirim dan di nilai.</small>
+			</td>
+		</tr>
+		<tr>
+			<td>Nilai Minimum</td>
+			<td>
+				<input type="number" name="kkm" class="form-control form-control-sm" required="" max="100" value="{{$this_quiz->kkm}}" readonly="">
+				<small>Berikan nilai minimum kelulusan pada quiz ini</small>
+			</td>
+		</tr>
+	</table>
+</div>
+@if(count($all_question)==0)
+<div class="alert alert-info">Belum terdapat pertanyaan. Buat satu untuk memulai</div>
+@else
+	@foreach($all_question as $question)
+		<div class="container mb-3 border rounded question_body" id="question_container{{$question->id}}" style="padding: 20px; font-size: 14px; max-width: 1000px; background-color: white;">
+			<div id="question_body{{$question->id}}">
+				<?php  
+				$check_attachment = DB::table('quiz_question_attachment')
+					->where([
+						['quiz_id',$this_quiz->quiz_id],
+						['question_id',$question->question_id]
+					])
+					->first();
+				?>
+				@if($check_attachment)
+				<a href="{{url('public/muatan/quiz/lampiran/'.$check_attachment->filename)}}">
+					<img src="{{url('public/muatan/quiz/lampiran/'.$check_attachment->filename)}}" width="300" style="margin: 0 auto; display: block;">
+				</a>
+				@endif
+				<?php echo $question->question; ?>
+			</div>
+			<div id="option_body{{$question->id}}">
+				<?php
+					if (isset($all_question)) {
+						$question_id = $question->question_id;
+						$quiz_id = $question->quiz_id;
+					}
+
+					$all_option = DB::table('quiz_option')
+					->where([
+						['quiz_question_id',$question_id],
+						['quiz_id',$quiz_id]
+					])
+					->get();
+					
+				?>
+				<table class="table" style="border: none;">
+					@foreach($all_option as $option)
+					<?php
+					$img_id = explode('.', $option->attachment);?>
+						<tr class="option_text" id="option_text{{$option->id}}" style="position: relative;">
+							<td id="column{{$option->id}}">
+								<div class="option-text">
+									@if($option->attachment!=null)
+									<img src="{{url('public/muatan/quiz/lampiran_option/'.$option->attachment)}}" style="max-width: 100px; background-color: none;" class="img{{$img_id[0]}}">
+									@endif
+									{{-- <div>
+										<?php echo $option->option_text; ?>
+									</div> --}}
+								</div>
+							</td>
+							<td id="column{{$option->id}}"><?php echo $option->option_text; ?></td>
+							<td>
+								@if($option->benar==1)
+								<div class="badge badge-success">Benar</div>
+								@endif
+							</td>
+						</tr>
+					@endforeach
+				</table>
+			</div>
+		</div>
+	@endforeach
+@endif
