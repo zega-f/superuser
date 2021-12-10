@@ -435,8 +435,6 @@ class KelasController extends Controller
             '7' => '1', 
         );
 
-        echo $zoom_date[$request->hari];
-
         $id_jadwal=Str::random(6);
         //ambil jam pelajaran
         $start_time = DB::table('atur_jam')
