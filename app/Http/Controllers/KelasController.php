@@ -424,8 +424,18 @@ class KelasController extends Controller
     // route:jadwalkelas_store
     public function jadwalkelas_store(Request $request)
     {   
-        
-        // date('Y-m-d H:i:s');
+        // converting php date to zoom date
+        $zoom_date = array(
+            '1' => '2', 
+            '2' => '3', 
+            '3' => '4', 
+            '4' => '5', 
+            '5' => '6', 
+            '6' => '7', 
+            '7' => '1', 
+        );
+
+        echo $zoom_date[$request->hari];
 
         $id_jadwal=Str::random(6);
         //ambil jam pelajaran
@@ -442,21 +452,20 @@ class KelasController extends Controller
         ->first();
         $mapel_zoom = $mapel->nama;
 
-        // new carbon('$request->tanggal $mulai');
         $user = Zoom::user()->find('fauzytamimkdr@gmail.com');
         $meeting = Zoom::meeting()->make([
             'topic' => "$mapel_zoom $request->tingkat$request->room jam ke-$request->jam",
             'type' => 8,
             'duration' => 45, // In minutes, optional
-            "start_time" => new carbon ("$request->tanggal $mulai"),
-            'timezone' => 'Asia/Jakarta',
+            "start_time" => $request->tanggal.' '.$mulai,
+            'timezone' => 'UTC',
             "password" => "123456",
 
             "recurrence" => [
                 "type"=>2,  //weekly
                 "repeat_interval"=> 1,
-                "weekly_days" => "$request->hari",
-                "end_times"=>"$request->pertemuan",
+                "weekly_days" => $zoom_date[$request->hari],
+                "end_times"=>$request->pertemuan,
             ],
 
             "settings" => [
@@ -465,9 +474,7 @@ class KelasController extends Controller
             ],
           ]);
           $user->meetings()->save($meeting);
-          echo $meeting;
-
-        // $meeting = file_get_contents("public/zoom.json");
+        
         $var = json_decode($meeting,true);
         $pertemuan=1;
 
@@ -484,9 +491,6 @@ class KelasController extends Controller
             'meet_id'=>$var['id'],
         ]);
 
-        // $start=$item['start_time'];
-        // $jam=$mulai;
-
         $occurrence = $var['occurrences'];
         foreach ($occurrence as $item) { 
             date_default_timezone_set('Asia/Jakarta'); 
@@ -501,12 +505,10 @@ class KelasController extends Controller
                     'id_jadwal'=>$id_jadwal,
                     'pertemuan'=>$pertemuan++,    
             );
-        }   
-        // echo json_encode($data);
-        
+        }           
 
         $store1 = DB::table('zoom_video')
-        ->insert ($data);
+        ->insert($data);
 
         return back()->with(['info' => 'Data Berhasil Disimpan!']);
       
@@ -582,19 +584,19 @@ class KelasController extends Controller
         $del_occurrences = \DB::table('zoom_video')
         ->where('meet_id',$request->id_jadwal)->delete();
 
-            $jadwal = DB::table('jadwal_kelas')
-            ->join('kelas', 'jadwal_kelas.kelas', '=', 'kelas.id_kelas')
-            ->join('mapel_kelas', 'jadwal_kelas.mapel', '=', 'mapel_kelas.id_mapel_kelas')
-            ->join('tblmapel', 'mapel_kelas.mapel', '=', 'tblmapel.id_mapel')
-            ->join('users', 'jadwal_kelas.pengajar', '=', 'users.partner_id')
-            ->join('tblhari', 'jadwal_kelas.hari', '=', 'tblhari.id')
-            ->join('atur_jam', 'jadwal_kelas.jam', '=', 'atur_jam.id')
-            ->select('jadwal_kelas.*', 'tblmapel.nama as nama_mapel', 'users.name as pengajar', 'users.partner_id as id_pengajar', 'tblhari.namahari as hari', 'tblhari.id as id_hari', 'atur_jam.start as mulai', 'atur_jam.end as akhir')
-            ->where('jadwal_kelas.kelas',$request->jadwal)//kelas
-            ->orderBy('jadwal_kelas.jam', 'asc')
-            ->get();
+        $jadwal = DB::table('jadwal_kelas')
+        ->join('kelas', 'jadwal_kelas.kelas', '=', 'kelas.id_kelas')
+        ->join('mapel_kelas', 'jadwal_kelas.mapel', '=', 'mapel_kelas.id_mapel_kelas')
+        ->join('tblmapel', 'mapel_kelas.mapel', '=', 'tblmapel.id_mapel')
+        ->join('users', 'jadwal_kelas.pengajar', '=', 'users.partner_id')
+        ->join('tblhari', 'jadwal_kelas.hari', '=', 'tblhari.id')
+        ->join('atur_jam', 'jadwal_kelas.jam', '=', 'atur_jam.id')
+        ->select('jadwal_kelas.*', 'tblmapel.nama as nama_mapel', 'users.name as pengajar', 'users.partner_id as id_pengajar', 'tblhari.namahari as hari', 'tblhari.id as id_hari', 'atur_jam.start as mulai', 'atur_jam.end as akhir')
+        ->where('jadwal_kelas.kelas',$request->jadwal)//kelas
+        ->orderBy('jadwal_kelas.jam', 'asc')
+        ->get();
 
-            Session::flash('delete', 'Berhasil menghapus Jadwal Tatap muka');
+        Session::flash('delete', 'Berhasil menghapus Jadwal Tatap muka');
 
         return view('kelas.tabel_jadwal', compact('jadwal'));
     }

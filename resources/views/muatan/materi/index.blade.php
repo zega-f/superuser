@@ -3,9 +3,8 @@
 
 <?php
 	$nm_mapel = DB::table('tblmapel')
-			->join('mapel_kelas', 'mapel_kelas.mapel', '=', 'tblmapel.id_mapel')
-
-	->where('id_mapel_kelas',Request::segment(3))
+	->join('mapel_kelas', 'mapel_kelas.mapel', '=', 'tblmapel.id_mapel')
+	->where('mapel_kelas.id_mapel_kelas',Request::segment(3))
 	->first();
 ?>
 <?php

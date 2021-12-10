@@ -49,11 +49,11 @@ class MapelController extends Controller
         ->first();
 
         $mapel_kelas = DB::table('mapel_kelas')
-                    ->join('tblmapel', 'mapel_kelas.mapel', '=', 'tblmapel.id_mapel')
-                    ->select('mapel_kelas.*', 'tblmapel.nama','tblmapel.id_mapel')
-                    ->where('mapel_kelas.jenjang',$jenjang)
-                    ->where('mapel_kelas.tingkat',$tingkat)
-                    ->get();
+        ->join('tblmapel', 'mapel_kelas.mapel', '=', 'tblmapel.id_mapel')
+        ->select('mapel_kelas.*', 'tblmapel.nama','tblmapel.id_mapel')
+        ->where('mapel_kelas.jenjang',$jenjang)
+        ->where('mapel_kelas.tingkat',$tingkat)
+        ->get();
 
     	return view('mapel.mapel_kelas',compact('kelas','mapel_kelas','jenjang','tingkat','regis'));
     }
@@ -253,6 +253,8 @@ class MapelController extends Controller
         ->where('bab.mapel',$mapel)
         ->get();
 
+        echo "string";
+
         // $sub_bab = DB::table('sub_bab')
         // ->join('bab','bab.id','=','sub_bab.bab_id')
         // ->where('bab.room_id',$tingkat)
@@ -270,7 +272,7 @@ class MapelController extends Controller
               ->select('tblmapel.*','mapel_kelas.id_mapel_kelas') 
               ->first();
       
-    	return view('kelola_mapel.index',compact('bab_materi','nm_kelas','nm_mapel','tingkat','mapel'));
+    	// return view('kelola_mapel.index',compact('bab_materi','nm_kelas','nm_mapel','tingkat','mapel'));
     }
 
 
